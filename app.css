@@ -1,0 +1,12 @@
+h1 {
+  text-align: center;
+}
+
+#joke-box {
+  padding: 20px;
+  background-color: #f9f7f5;
+}
+
+#joke-box p:last-child {
+  margin-bottom: 0;
+}
