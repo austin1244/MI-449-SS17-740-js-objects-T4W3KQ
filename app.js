@@ -1,35 +1,53 @@
 // ----
 // DATA
 // ----
-function validateJoke (joke) {
-  Object.keys(joke)
-}
+
+// created a joke data structure
 function Joke (name, setup, punchline) {
-  return {
-    name: name,
-    setup: setup,
-    punchline: punchline
-  }
+  this.name = name
+  this.setup = setup
+  this.punchline = punchline
 }
-// A couple jokes to start with
+function JokeException (message) {
+  this.message = message
+  this.name = 'JokeException'
+}
+// joke object
 var jokes = {
+  // takes a Joke param
   add: function (joke) {
-    this.stored[joke.key] = {
+    var jokesObj = this.stored
+    jokesObj[joke.name] = {
       setup: joke.setup,
       punchline: joke.punchline
     }
+    this.stored = jokesObj
+  },
+  delete: function (key) {
+    var jokesObj = this.stored
+    delete jokesObj[key]
+    this.stored = jokesObj
   }
 }
+// defined a new property to load and store jokes
 Object.defineProperty(jokes, 'stored', {
   get: function () {
     var jokes = window.localStorage.getItem('jokes')
-    return jokes !== null
-           ? jokes
-           : {}
+    try {
+      jokes = JSON.parse(jokes) || {}
+      if (typeof (jokes) !== 'object') {
+        throw new JokeException('Invalid Object')
+      }
+    } catch (e) {
+      // set local storage with empty object on failed parse Exception
+      // or Invalid Object Exception
+      jokes = {}
+      window.localStorage.setItem('jokes', JSON.stringify(jokes))
+    }
+    return jokes
   },
   set: function (jokes) {
-    window.localStorage.setItem('jokes', jokes)
-    return jokes
+    window.localStorage.setItem('jokes', JSON.stringify(jokes))
   }
 })
 
@@ -46,7 +64,8 @@ var updateJokesMenu = function () {
   // Don't worry too much about this code for now.
   // You'll learn how to do advanced stuff like
   // this in a later lesson.
-  var jokeKeys = Object.keys(jokes.stored)
+  var jokeObj = jokes.stored
+  var jokeKeys = Object.keys(jokeObj)
   var jokeKeyListItems = jokeKeys.join('</li><li>') || noJokesMessage
   jokesMenuList.innerHTML = '<li>' + jokeKeyListItems + '</li>'
 }
@@ -58,7 +77,7 @@ var updateDisplayedJoke = function () {
   var requestedJokeKey = requestedJokeInput.value
   if (requestedJokeKey in jokes.stored) {
     var joke = jokes.stored[requestedJokeKey]
-    jokeBox.innerHTML = '<p>' + joke.setup + '</p><p>' + joke.punchline + '</p'
+    jokeBox.innerHTML = '<p>' + joke.setup + '</p><p>' + joke.punchline + '</p>'
   } else {
     jokeBox.textContent = 'No matching joke found'
   }
@@ -85,12 +104,22 @@ updatePage()
 // remember a joke
 document.getElementById('remember-btn')
         .addEventListener('click', function () {
-          var joke = new Joke(
-            document.getElementById('joke-about').value,
-            document.getElementById('joke-setup').value,
-            document.getElementById('joke-punchline').value
+          // Had this seperated into two lines,
+          // but I liked how it read as a one liner
+          jokes.add(new Joke(
+              document.getElementById('joke-about').value,
+              document.getElementById('joke-setup').value,
+              document.getElementById('joke-punchline').value
+            )
           )
-          jokes.add(joke)
+          updateJokesMenu()
+        })
+
+document.getElementById('forget-joke')
+        .addEventListener('click', function () {
+          jokes.delete(
+            document.getElementById('forget-input').value
+          )
           updateJokesMenu()
         })
 // Keep the requested joke up-to-date
