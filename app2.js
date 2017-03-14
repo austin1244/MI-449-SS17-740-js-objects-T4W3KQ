@@ -2,6 +2,8 @@
 // DATA
 // ----
 
+var adapter =  new LocalStorageDataAdapter("JOKES")
+
 // created a joke data structure
 function Joke (name, setup, punchline) {
   this.name = name
@@ -10,34 +12,27 @@ function Joke (name, setup, punchline) {
 }
 // joke object
 var jokes = {
+
+  local: adapter.$initResource("data"),
+
   // takes a Joke param
   add: function (joke) {
-    var jokesObj = this.stored
+    // get joke object from cache or storage
+    var jokesObj = this.local.data
+    //add to the joke list
     jokesObj[joke.name] = {
       setup: joke.setup,
       punchline: joke.punchline
     }
-    this.stored = jokesObj
+    // set new joke object
+    this.local.data = jokesObj
   },
   delete: function (key) {
-    var jokesObj = this.stored
+    var jokesObj = this.local.data
     delete jokesObj[key]
-    this.stored = jokesObj
+    this.local.data = jokesObj
   }
 }
-// defined a new property to load and store jokes
-Object.defineProperty(jokes, 'stored', {
-  get: function () {
-    var jokes = JSON.parse(window.localStorage.getItem('jokes'))
-    if (typeof jokes !== 'object') {
-      jokes = {}
-    }
-    return jokes
-  },
-  set: function (jokes) {
-    window.localStorage.setItem('jokes', JSON.stringify(jokes))
-  }
-})
 
 // The message to display if the jokes object is empty
 var noJokesMessage = 'I... I don\'t know any jokes. 😢'
@@ -52,7 +47,7 @@ var updateJokesMenu = function () {
   // Don't worry too much about this code for now.
   // You'll learn how to do advanced stuff like
   // this in a later lesson.
-  var jokeObj = jokes.stored
+  var jokeObj = jokes.local.data
   var jokeKeys = Object.keys(jokeObj)
   var jokeKeyListItems = jokeKeys.join('</li><li>') || noJokesMessage
   jokesMenuList.innerHTML = '<li>' + jokeKeyListItems + '</li>'
@@ -63,8 +58,8 @@ var requestedJokeInput = document.getElementById('requested-joke')
 var jokeBox = document.getElementById('joke-box')
 var updateDisplayedJoke = function () {
   var requestedJokeKey = requestedJokeInput.value
-  if (jokes.stored.hasOwnProperty(requestedJokeKey)) {
-    var joke = jokes.stored[requestedJokeKey]
+  if (jokes.local.data.hasOwnProperty(requestedJokeKey)) {
+    var joke = jokes.local.data[requestedJokeKey]
     jokeBox.innerHTML = '<p>' + joke.setup + '</p><p>' + joke.punchline + '</p>'
   } else {
     jokeBox.textContent = 'No matching joke found'
