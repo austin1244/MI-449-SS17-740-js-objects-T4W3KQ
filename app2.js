@@ -2,7 +2,7 @@
 // DATA
 // ----
 
-var adapter =  new LocalStorageDataAdapter("JOKES")
+var adapter = new LocalStorageDataAdapter('JOKES')
 
 // created a joke data structure
 function Joke (name, setup, punchline) {
@@ -13,13 +13,13 @@ function Joke (name, setup, punchline) {
 // joke object
 var jokes = {
 
-  local: adapter.$initResource("data"),
+  local: adapter.$initResource('data'),
 
   // takes a Joke param
   add: function (joke) {
     // get joke object from cache or storage
     var jokesObj = this.local.data
-    //add to the joke list
+    // add to the joke list
     jokesObj[joke.name] = {
       setup: joke.setup,
       punchline: joke.punchline
@@ -97,12 +97,17 @@ document.getElementById('remember-btn')
           )
           updatePage()
         })
+document.getElementById('reset')
+        .addEventListener('click', function () {
+          jokes.local.$reset()
+          updatePage()
+        })
 
 document.getElementById('forget-joke')
         .addEventListener('click', function () {
-          jokes.delete(
-            document.getElementById('forget-input').value
-          )
+          var input = document.getElementById('forget-input')
+          jokes.delete(input.value)
+          input.value = ''
           updatePage()
         })
 // Keep the requested joke up-to-date

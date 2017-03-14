@@ -1,6 +1,5 @@
 var LocalStorageDataAdapter = function (appId) {
   var self = this
-
   // ----------------
   // SET UP THE CACHE
   // ----------------
@@ -20,7 +19,30 @@ var LocalStorageDataAdapter = function (appId) {
   // -----------------
   // RESOURCE HANDLING
   // -----------------
-
+  Object.defineProperty(self, '$reset', {
+    value: function () {
+      for (var elem in cache) {
+        // remove from storage
+        window.localStorage.removeItem(privatizeProperty(elem))
+        // remove from cache
+        delete cache[elem]
+      }
+    }
+  })
+  Object.defineProperty(self, '$resetAll', {
+    value: function () {
+      // delete from storage
+      for (var index in window.localStorage) {
+        if (index.includes(appId)) {
+          window.localStorage.removeItem(index)
+        }
+      }
+      // I realize that removeItem in the $reset
+      // will probably not do anything, but it saves me from
+      // re writting the loop
+      self.$reset() // remove from cache
+    }
+  })
   Object.defineProperty(self, '$initResource', {
 
     value: function (resourceName) {
@@ -33,12 +55,15 @@ var LocalStorageDataAdapter = function (appId) {
       // fetch from and update localStorage.
       Object.defineProperty(self, resourceName, {
         get: function () {
-
           return cache[resourceName] || getResourceFromLocalStorage()
         },
         set: function (newData) {
-          var stringifiedResource = JSON.stringify(newData)
-          window.localStorage.setItem(privateResourceName, stringifiedResource)
+          if (isObject(newData)) {
+            var stringifiedResource = JSON.stringify(newData)
+            window.localStorage.setItem(privateResourceName, stringifiedResource)
+          } else {
+            throw new InvalidResourceException(newData)
+          }
         },
         // Set the resource to enumerable, so that it IS included in
         // iterated keys or in JSON.stringify output.
@@ -123,8 +148,17 @@ var LocalStorageDataAdapter = function (appId) {
    *
    */
   function isObject (obj) {
-
     return obj === Object(obj) && !Array.isArray(obj)
+  }
+  function InvalidResourceException (data) {
+    this.type = typeof data
+    this.name = 'ResourceException'
+
+    if (Array.isArray(data)) {
+      this.type = 'Array'
+    }
+
+    this.message = 'Expected a Object, but found: ' + this.type
   }
   // Scoping for private properties and localStorage keys.
   function privatizeProperty (property) {
