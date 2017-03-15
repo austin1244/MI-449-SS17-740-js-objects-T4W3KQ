@@ -1,6 +1,6 @@
-// ----
+// -----
 // DATA
-// ----
+// -----
 
 // created a joke data structure
 function Joke (name, setup, punchline) {
